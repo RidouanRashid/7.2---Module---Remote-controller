@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Tetris — Lobby</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Courier New', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+    }
+    .title {
+      font-size: 4em;
+      font-weight: bold;
+      letter-spacing: 12px;
+      background: linear-gradient(90deg, #00f0f0, #a000f0, #f00000, #f0f000);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle {
+      font-size: 1em;
+      color: #64748b;
+      letter-spacing: 4px;
+      margin-top: -24px;
+    }
+    .lobby-cards {
+      display: flex;
+      gap: 28px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 640px;
+    }
+    .lobby-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      padding: 32px 36px;
+      border: 3px solid #334155;
+      border-radius: 18px;
+      background: #1e293b;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 240px;
+      text-decoration: none;
+      color: #e2e8f0;
+    }
+    .lobby-card:hover {
+      border-color: #60a5fa;
+      background: #1e3a5f;
+      transform: translateY(-3px);
+    }
+    .lobby-card .card-icon {
+      font-size: 2.4em;
+    }
+    .lobby-card .card-title {
+      font-size: 1.3em;
+      font-weight: bold;
+    }
+    .lobby-card .card-desc {
+      font-size: 0.85em;
+      color: #94a3b8;
+      text-align: center;
+      line-height: 1.5;
+    }
+    .footer {
+      font-size: 0.8em;
+      color: #475569;
+      text-align: center;
+      line-height: 1.6;
+    }
+    @media (max-width: 560px) {
+      .title { font-size: 2.6em; letter-spacing: 6px; }
+      .lobby-cards { flex-direction: column; gap: 16px; }
+      .lobby-card { min-width: 0; width: 85vw; }
+    }
+  </style>
+</head>
+<body>
+  <div class="title">TETRIS</div>
+  <div class="subtitle">REMOTE PLAY</div>
+
+  <div class="lobby-cards">
+    <a class="lobby-card" href="tetris.html?role=host">
+      <span class="card-icon">🖥️</span>
+      <span class="card-title">Create Game</span>
+      <span class="card-desc">Host a Tetris lobby.<br>A room code will be generated<br>for a controller to join.</span>
+    </a>
+    <a class="lobby-card" href="tetris.html?role=controller">
+      <span class="card-icon">🎮</span>
+      <span class="card-title">Join as Controller</span>
+      <span class="card-desc">Enter a room code to connect<br>to a host and control<br>their Tetris game remotely.</span>
+    </a>
+  </div>
+
+  <div class="footer">
+    Open this page on two devices or tabs.<br>
+    One creates the game, the other joins as controller.
+  </div>
+</body>
+</html>
