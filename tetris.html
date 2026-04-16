@@ -225,6 +225,23 @@
     .ctrl-go-score { font-size:1.2em; color:#60a5fa; }
     .ctrl-go-wait { color:#94a3b8; }
 
+    /* ── CONTROLLER MINI SCREEN ── */
+    #ctrl-mini-game {
+      display:flex; flex-direction:column; align-items:center; gap:6px;
+      background:#1e293b; border-radius:12px; padding:10px;
+      border:2px solid #334155;
+    }
+    .ctrl-game-header {
+      display:flex; align-items:center; gap:12px;
+    }
+    .ctrl-score-info {
+      display:flex; flex-direction:column; align-items:center; gap:2px;
+      font-size:.75em; color:#94a3b8; min-width:80px;
+    }
+    #ctrl-board-cv {
+      border-radius:6px; border:1px solid #334155; background:#111;
+    }
+
     /* ── RESPONSIVE ── */
     @media (max-width:700px) {
       .title { font-size:2.6em; letter-spacing:6px; }
@@ -299,6 +316,17 @@
   <!-- CONTROLLER: D-PAD -->
   <div id="controller-view" class="screen">
     <div id="ctrl-status">Connected</div>
+    <div id="ctrl-mini-game">
+      <div class="ctrl-game-header">
+        <div class="mini-box"><span>Hold</span><canvas id="ctrl-hold-cv" class="mini-canvas" width="64" height="64"></canvas></div>
+        <div class="ctrl-score-info">
+          <div id="ctrl-score">Score: 0</div>
+          <div id="ctrl-lines">Lines: 0</div>
+        </div>
+        <div class="mini-box"><span>Next</span><canvas id="ctrl-next-cv" class="mini-canvas" width="64" height="64"></canvas></div>
+      </div>
+      <canvas id="ctrl-board-cv" width="150" height="300"></canvas>
+    </div>
     <div class="dpad">
       <button class="btn btn-rotate"   data-action="rotate"   data-repeat="false"><span class="icon">&uarr;</span><span class="label">Rotate</span></button>
       <button class="btn btn-pause"    data-action="pause"    data-repeat="false"><span class="icon">&#9208;</span><span class="label">Pause</span></button>

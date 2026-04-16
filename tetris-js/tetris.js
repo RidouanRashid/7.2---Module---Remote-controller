@@ -308,6 +308,7 @@ function createTetrisGame(opts) {
       ctx.fillText('PAUSED', canvas.width/2, canvas.height/2);
       ctx.textAlign = 'start';
     }
+    if (opts.onDraw) opts.onDraw(getFullState());
   }
   function drawGameOverOverlay() {
     ctx.fillStyle = 'rgba(0,0,0,0.6)';
@@ -317,6 +318,24 @@ function createTetrisGame(opts) {
     ctx.fillStyle = '#e2e8f0'; ctx.font = '20px monospace';
     ctx.fillText('Score: ' + S.score, canvas.width/2, canvas.height/2 + 20);
     ctx.textAlign = 'start';
+    if (opts.onDraw) opts.onDraw(getFullState());
+  }
+  function getFullState() {
+    var ghostY = S.cur ? S.cur.y : 0;
+    if (S.cur && !S.over) {
+      while (valid(S.cur, 0, ghostY - S.cur.y + 1)) ghostY++;
+    }
+    return {
+      board: S.board,
+      cur: S.cur ? { shape: S.cur.shape, x: S.cur.x, y: S.cur.y } : null,
+      ghostY: ghostY,
+      hold: S.hold ? { shape: S.hold.shape } : null,
+      next: S.next ? { shape: S.next.shape } : null,
+      score: S.score,
+      lines: S.lines,
+      paused: S.paused,
+      over: S.over
+    };
   }
 
   /* ── Logic ── */
@@ -452,7 +471,7 @@ function createTetrisGame(opts) {
   function cleanup() { clearTimeout(S.timer); }
 
   return {
-    start, handleAction, cleanup,
+    start, handleAction, cleanup, getFullState,
     isOver:function(){return S.over;},
     getScore:function(){return S.score;},
     getLines:function(){return S.lines;},
@@ -500,6 +519,107 @@ const controllerPad = (function () {
   }
   function cleanup() { stopRepeat(); }
   return { init, cleanup };
+})();
+
+/* ═══════════════════════════════════════════════════════
+   SECTION 5b — CONTROLLER MINI SCREEN RENDERER
+   ═══════════════════════════════════════════════════════ */
+const controllerMiniScreen = (function () {
+  const COLORS = ['#2a2a3a','#40f8f8','#5090ff','#ffc040','#f8f860','#60e860','#c060ff','#ff5060'];
+  const COLS = 10, ROWS = 20;
+
+  var boardCv, boardCtx, holdCv, nextCv, scoreEl, linesEl;
+  var ready = false;
+
+  function init() {
+    boardCv  = document.getElementById('ctrl-board-cv');
+    boardCtx = boardCv.getContext('2d');
+    holdCv   = document.getElementById('ctrl-hold-cv');
+    nextCv   = document.getElementById('ctrl-next-cv');
+    scoreEl  = document.getElementById('ctrl-score');
+    linesEl  = document.getElementById('ctrl-lines');
+    ready = true;
+  }
+
+  function render(state) {
+    if (!ready) init();
+    var BLK = boardCv.width / COLS;
+
+    /* board */
+    boardCtx.fillStyle = COLORS[0];
+    boardCtx.fillRect(0, 0, boardCv.width, boardCv.height);
+    for (var y = 0; y < ROWS; y++)
+      for (var x = 0; x < COLS; x++)
+        if (state.board[y][x]) {
+          boardCtx.fillStyle = COLORS[state.board[y][x]];
+          boardCtx.fillRect(x * BLK, y * BLK, BLK - 1, BLK - 1);
+        }
+
+    /* ghost piece */
+    if (state.cur && !state.over) {
+      boardCtx.globalAlpha = 0.25;
+      drawShape(boardCtx, state.cur.shape, state.cur.x, state.ghostY, BLK);
+      boardCtx.globalAlpha = 1;
+    }
+
+    /* current piece */
+    if (state.cur && !state.over) {
+      drawShape(boardCtx, state.cur.shape, state.cur.x, state.cur.y, BLK);
+    }
+
+    /* paused overlay */
+    if (state.paused) {
+      boardCtx.fillStyle = 'rgba(0,0,0,0.55)';
+      boardCtx.fillRect(0, 0, boardCv.width, boardCv.height);
+      boardCtx.fillStyle = '#fff'; boardCtx.font = 'bold 16px monospace'; boardCtx.textAlign = 'center';
+      boardCtx.fillText('PAUSED', boardCv.width / 2, boardCv.height / 2);
+      boardCtx.textAlign = 'start';
+    }
+
+    /* game over overlay */
+    if (state.over) {
+      boardCtx.fillStyle = 'rgba(0,0,0,0.6)';
+      boardCtx.fillRect(0, 0, boardCv.width, boardCv.height);
+      boardCtx.fillStyle = '#fbbf24'; boardCtx.font = 'bold 16px monospace'; boardCtx.textAlign = 'center';
+      boardCtx.fillText('GAME OVER', boardCv.width / 2, boardCv.height / 2);
+      boardCtx.textAlign = 'start';
+    }
+
+    /* hold & next */
+    drawMiniPiece(holdCv, state.hold);
+    drawMiniPiece(nextCv, state.next);
+
+    /* score / lines */
+    scoreEl.textContent = 'Score: ' + state.score;
+    linesEl.textContent  = 'Lines: ' + state.lines;
+  }
+
+  function drawShape(cx, shape, px, py, blk) {
+    for (var r = 0; r < shape.length; r++)
+      for (var c = 0; c < shape[r].length; c++)
+        if (shape[r][c]) {
+          cx.fillStyle = COLORS[shape[r][c]];
+          cx.fillRect((px + c) * blk, (py + r) * blk, blk - 1, blk - 1);
+        }
+  }
+
+  function drawMiniPiece(cv, piece) {
+    var cx = cv.getContext('2d');
+    cx.fillStyle = '#111';
+    cx.fillRect(0, 0, cv.width, cv.height);
+    if (!piece || !piece.shape) return;
+    var sz = 13;
+    var ox = (cv.width  - piece.shape[0].length * sz) / 2;
+    var oy = (cv.height - piece.shape.length * sz) / 2;
+    for (var r = 0; r < piece.shape.length; r++)
+      for (var c = 0; c < piece.shape[r].length; c++)
+        if (piece.shape[r][c]) {
+          cx.fillStyle = COLORS[piece.shape[r][c]];
+          cx.fillRect(ox + c * sz, oy + r * sz, sz - 1, sz - 1);
+        }
+  }
+
+  return { init: init, render: render };
 })();
 
 /* ═══════════════════════════════════════════════════════
@@ -681,6 +801,24 @@ const controllerPad = (function () {
             });
           }
           checkAllOver();
+        },
+        onDraw: function(state) {
+          const allPlayers = networkManager.getPlayers();
+          const realIdx = allPlayers.indexOf(player);
+          if (realIdx >= 0) {
+            networkManager.sendToPlayer(realIdx, {
+              type: 'state',
+              board: state.board,
+              cur: state.cur,
+              ghostY: state.ghostY,
+              hold: state.hold,
+              next: state.next,
+              score: state.score,
+              lines: state.lines,
+              paused: state.paused,
+              over: state.over
+            });
+          }
         }
       });
       games.push(g);
@@ -759,6 +897,7 @@ const controllerPad = (function () {
   });
 
   let savedCode = '';
+  let controllerActive = false;
 
   function showJoinForm() {
     ui.hideAll();
@@ -791,21 +930,27 @@ const controllerPad = (function () {
         if (!data || !data.type) return;
         switch (data.type) {
           case 'gameStart':
+            controllerActive = true;
             ui.hideAll();
             ui.show('controller-view');
             ui.showBack();
             controllerPad.init();
+            controllerMiniScreen.init();
+            document.getElementById('ctrl-status').textContent = 'Connected';
+            document.getElementById('ctrl-status').style.background = '#16a34a';
+            break;
+          case 'state':
+            controllerMiniScreen.render(data);
             break;
           case 'yourGameOver':
-            ui.hideAll();
-            ui.show('controller-gameover');
-            ui.showBack();
-            document.getElementById('ctrl-final-score').textContent =
-              'Score: ' + (data.score || 0) + '  Lines: ' + (data.lines || 0);
+            controllerActive = false;
+            document.getElementById('ctrl-status').textContent = 'Game Over';
+            document.getElementById('ctrl-status').style.background = '#b91c1c';
             break;
           case 'roundOver':
             break;
           case 'backToLobby':
+            controllerActive = false;
             ui.hideAll();
             ui.show('controller-waiting');
             ui.showBack();
@@ -836,13 +981,22 @@ const controllerPad = (function () {
   /* ── KEYBOARD CONTROLS (host/desktop) ── */
   const KEY_MAP = {
     ArrowLeft:'left', ArrowRight:'right', ArrowUp:'rotate',
-    ArrowDown:'softDrop', ' ':'hardDrop', z:'hold', p:'pause'
+    ArrowDown:'softDrop', ' ':'hardDrop', z:'hold', c:'hold', p:'pause'
   };
   window.addEventListener('keydown', function(e) {
     const action = KEY_MAP[e.key];
-    if (!action || !games.length) return;
-    e.preventDefault();
-    games.forEach(function(g) { if (!g.isOver()) g.handleAction(action); });
+    if (!action) return;
+    /* Host: direct game control */
+    if (games.length) {
+      e.preventDefault();
+      games.forEach(function(g) { if (!g.isOver()) g.handleAction(action); });
+      return;
+    }
+    /* Controller: send via network */
+    if (controllerActive) {
+      e.preventDefault();
+      networkManager.controllerSend({ action: action });
+    }
   });
 
   /* ── CLEANUP ── */

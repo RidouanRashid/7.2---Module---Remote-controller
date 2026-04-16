@@ -18,7 +18,7 @@ Multiplayer Tetris waarbij één apparaat het scherm (host) is en andere apparat
 | ↑ | Draaien |
 | ↓ | Soft drop |
 | Spatie | Hard drop |
-| Z | Hold |
+| Z / C | Hold |
 | P | Pauze |
 
 ## Features
@@ -26,6 +26,8 @@ Multiplayer Tetris waarbij één apparaat het scherm (host) is en andere apparat
 - Meerdere spelers tegelijk via roomcode
 - Blokken vallen sneller naarmate je meer lijnen cleart
 - Toetsenbord-besturing op desktop
+- Controller ondersteunt ook toetsenbord (pijltjes, spatie, Z/C, P)
+- Mini Tetris-scherm op controller zodat je je eigen bord kunt volgen
 - Lichtere, beter zichtbare blokkleuren
 
 ## Technologieën
@@ -44,5 +46,6 @@ HTML · CSS · JavaScript · [PeerJS](https://peerjs.com/) · [Render](https://r
 | Tip | Status |
 |-----|--------|
 | Blokken sneller laten vallen over tijd | ✅ Verwerkt — snelheid stijgt elke 10 lijnen |
-| Keyboard-besturing voor desktop | ✅ Verwerkt — pijltjestoetsen, spatie, Z, P |
+| Keyboard-besturing voor desktop | ✅ Verwerkt — pijltjestoetsen, spatie, Z/C, P |
 | Lichtere kleuren | ✅ Verwerkt — blokken hebben nu heldere, lichtere kleuren |
+| Controller toetsenbord + mini scherm | ✅ Verwerkt — controller werkt met keyboard en toont live mini-bord |
