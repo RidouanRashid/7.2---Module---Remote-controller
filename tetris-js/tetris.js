@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════
-   SECTION 0 — GUARD
+   SECTIE 0 — BEVEILIGING: controleer of PeerJS geladen is
    ═══════════════════════════════════════════════════════ */
 if (typeof Peer === 'undefined') {
   document.body.innerHTML = '<div style="color:#f87171;padding:48px;font-family:monospace;font-size:1.2em;text-align:center;">' +
@@ -8,7 +8,7 @@ if (typeof Peer === 'undefined') {
 }
 
 /* ═══════════════════════════════════════════════════════
-   SECTION 1 — CONSTANTS
+   SECTIE 1 — CONSTANTEN: alle mogelijke spelacties
    ═══════════════════════════════════════════════════════ */
 const ACTIONS = {
   LEFT:'left', RIGHT:'right', ROTATE:'rotate',
@@ -17,7 +17,8 @@ const ACTIONS = {
 };
 
 /* ═══════════════════════════════════════════════════════
-   SECTION 2 — UI HELPERS
+   SECTIE 2 — UI HULPFUNCTIES: schermen tonen/verbergen,
+   terug-knop, statusbalk en toast-meldingen
    ═══════════════════════════════════════════════════════ */
 const ui = (function () {
   const ids = ['begin-screen','host-lobby','host-game','host-results',
@@ -55,7 +56,8 @@ const ui = (function () {
 })();
 
 /* ═══════════════════════════════════════════════════════
-   SECTION 3 — NETWORK MANAGER (multi-connection)
+   SECTIE 3 — NETWERKBEHEER: peer-to-peer verbinding via
+   PeerJS, ondersteunt meerdere spelers tegelijk
    ═══════════════════════════════════════════════════════ */
 const networkManager = (function () {
   let peer = null;
@@ -63,9 +65,9 @@ const networkManager = (function () {
   let roomCode = null;
   let callbacks = {};
 
-  /* Host: multiple players */
+  /* Host: lijst van verbonden spelers */
   let players = [];   // [{conn, name, connected}]
-  /* Controller: single connection */
+  /* Controller: enkele verbinding met de host */
   let conn = null;
 
   function generateCode() {
@@ -76,7 +78,7 @@ const networkManager = (function () {
   }
   function fullId(code) { return 'tetris-rc-' + code; }
 
-  /* ── HOST ── */
+  /* ── HOST: start een lobby en luister naar inkomende verbindingen ── */
   function hostStart(cbs) {
     role = 'host';
     callbacks = cbs;
@@ -124,13 +126,13 @@ const networkManager = (function () {
         peer = new Peer(fullId(roomCode), { debug: 2 });
         peer.on('open', function() { if (callbacks.onReady) callbacks.onReady(roomCode); });
         peer.on('connection', function(dc) {
-          /* same wiring — simplified: just call hostStart again on collision */
+          /* zelfde bedrading — vereenvoudigd bij botsing van kamercode */
         });
       }
     });
   }
 
-  /* ── CONTROLLER ── */
+  /* ── CONTROLLER: maak verbinding met een bestaande host-kamer ── */
   function controllerJoin(code, cbs) {
     role = 'controller';
     callbacks = cbs;
@@ -196,7 +198,8 @@ const networkManager = (function () {
 })();
 
 /* ═══════════════════════════════════════════════════════
-   SECTION 4 — TETRIS GAME FACTORY
+   SECTIE 4 — TETRIS SPEL FABRIEK: maakt een volledig
+   Tetris-spel aan met canvas, logica en besturing
    ═══════════════════════════════════════════════════════ */
 function createTetrisGame(opts) {
   const canvas = opts.canvas;
@@ -249,7 +252,7 @@ function createTetrisGame(opts) {
   }
   function randomPiece() { return makePiece(nextType()); }
 
-  /* ── Drawing ── */
+  /* ── Tekenen: blok, bord, stuk, mini-preview en volledige weergave ── */
   function drawBlock(x, y, ci) {
     ctx.fillStyle = COLORS[ci];
     ctx.fillRect(x*BLOCK, y*BLOCK, BLOCK-2, BLOCK-2);
@@ -338,7 +341,7 @@ function createTetrisGame(opts) {
     };
   }
 
-  /* ── Logic ── */
+  /* ── Logica: botsingsdetectie, rijen wissen, draaien, laten vallen ── */
   function valid(p, ox, oy, shape) {
     ox = ox||0; oy = oy||0; shape = shape || p.shape;
     for (let r = 0; r < shape.length; r++)
@@ -441,7 +444,7 @@ function createTetrisGame(opts) {
     S.timer = setTimeout(tick, S.interval);
   }
 
-  /* ── Public ── */
+  /* ── Publieke functies: start, actie verwerken, opruimen ── */
   function start() {
     resetBoard(); refillBag();
     S.cur = randomPiece(); S.next = randomPiece();
@@ -480,7 +483,8 @@ function createTetrisGame(opts) {
 }
 
 /* ═══════════════════════════════════════════════════════
-   SECTION 5 — CONTROLLER D-PAD
+   SECTIE 5 — CONTROLLER STUURKNOPPEN: touch D-pad
+   knoppen met herhaling voor mobiele besturing
    ═══════════════════════════════════════════════════════ */
 const controllerPad = (function () {
   const REPEAT_DELAY = 170, REPEAT_RATE = 55;
@@ -522,7 +526,8 @@ const controllerPad = (function () {
 })();
 
 /* ═══════════════════════════════════════════════════════
-   SECTION 5b — CONTROLLER MINI SCREEN RENDERER
+   SECTIE 5b — CONTROLLER MINISCHERM: tekent een
+   verkleind Tetris-bord op het scherm van de controller
    ═══════════════════════════════════════════════════════ */
 const controllerMiniScreen = (function () {
   const COLORS = ['#2a2a3a','#40f8f8','#5090ff','#ffc040','#f8f860','#60e860','#c060ff','#ff5060'];
@@ -545,7 +550,7 @@ const controllerMiniScreen = (function () {
     if (!ready) init();
     var BLK = boardCv.width / COLS;
 
-    /* board */
+    /* speelbord tekenen */
     boardCtx.fillStyle = COLORS[0];
     boardCtx.fillRect(0, 0, boardCv.width, boardCv.height);
     for (var y = 0; y < ROWS; y++)
@@ -555,19 +560,19 @@ const controllerMiniScreen = (function () {
           boardCtx.fillRect(x * BLK, y * BLK, BLK - 1, BLK - 1);
         }
 
-    /* ghost piece */
+    /* spookstuk (voorvertoning waar het blok landt) */
     if (state.cur && !state.over) {
       boardCtx.globalAlpha = 0.25;
       drawShape(boardCtx, state.cur.shape, state.cur.x, state.ghostY, BLK);
       boardCtx.globalAlpha = 1;
     }
 
-    /* current piece */
+    /* huidig stuk */
     if (state.cur && !state.over) {
       drawShape(boardCtx, state.cur.shape, state.cur.x, state.cur.y, BLK);
     }
 
-    /* paused overlay */
+    /* pauze-overlay */
     if (state.paused) {
       boardCtx.fillStyle = 'rgba(0,0,0,0.55)';
       boardCtx.fillRect(0, 0, boardCv.width, boardCv.height);
@@ -576,7 +581,7 @@ const controllerMiniScreen = (function () {
       boardCtx.textAlign = 'start';
     }
 
-    /* game over overlay */
+    /* spel voorbij overlay */
     if (state.over) {
       boardCtx.fillStyle = 'rgba(0,0,0,0.6)';
       boardCtx.fillRect(0, 0, boardCv.width, boardCv.height);
@@ -585,11 +590,11 @@ const controllerMiniScreen = (function () {
       boardCtx.textAlign = 'start';
     }
 
-    /* hold & next */
+    /* vasthouden & volgende */
     drawMiniPiece(holdCv, state.hold);
     drawMiniPiece(nextCv, state.next);
 
-    /* score / lines */
+    /* score en lijnen bijwerken */
     scoreEl.textContent = 'Score: ' + state.score;
     linesEl.textContent  = 'Lines: ' + state.lines;
   }
@@ -623,7 +628,8 @@ const controllerMiniScreen = (function () {
 })();
 
 /* ═══════════════════════════════════════════════════════
-   SECTION 6 — PAGE FLOW
+   SECTIE 6 — PAGINAVERLOOP: koppelt alle schermen,
+   regelt host-lobby, spelstart, resultaten en controller
    ═══════════════════════════════════════════════════════ */
 (function () {
   const pillCode     = document.getElementById('pill-code');
@@ -635,7 +641,7 @@ const controllerMiniScreen = (function () {
   let games = [];
   let gameCards = [];
 
-  /* ── Helper: build a game card DOM ── */
+  /* ── Hulpfunctie: bouw een spelkaart-DOM per speler ── */
   function createGameCard(name) {
     const card = document.createElement('div');
     card.className = 'game-card';
@@ -690,7 +696,7 @@ const controllerMiniScreen = (function () {
     };
   }
 
-  /* ── Lobby player list update ── */
+  /* ── Lobby spelerlijst bijwerken ── */
   function updateLobbyList() {
     const pp = networkManager.getPlayers();
     playerListEl.innerHTML = '';
@@ -712,7 +718,7 @@ const controllerMiniScreen = (function () {
   }
 
   /* ──────────────────────
-     HOST FLOW
+     HOST VERLOOP: lobby, spel starten, resultaten
      ────────────────────── */
   document.getElementById('btn-host').addEventListener('click', goHostLobby);
   startBtn.addEventListener('click', startAllGames);
@@ -735,7 +741,7 @@ const controllerMiniScreen = (function () {
       },
       onPlayerLeave: function(idx) {
         updateLobbyList();
-        /* If mid-game and this player's game exists, force stop it */
+        /* Als midden in spel en dit spelersspel bestaat, stop het */
         if (games[idx] && !games[idx].isOver()) {
           games[idx].forceStop();
           if (gameCards[idx]) gameCards[idx].element.classList.add('is-over');
@@ -764,17 +770,17 @@ const controllerMiniScreen = (function () {
     const pp = networkManager.getPlayers().filter(function(p){return p.connected;});
     if (!pp.length) return;
 
-    /* Clean previous */
+    /* Vorige opruimen */
     games.forEach(function(g){ g.cleanup(); });
     games = [];
     gameCards = [];
     gamesGrid.innerHTML = '';
 
-    /* Size class */
+    /* Grootteklasse op basis van aantal spelers */
     const n = pp.length;
     gamesGrid.className = 'p-' + Math.min(n, 4);
 
-    /* Create a game per player */
+    /* Maak een spel per speler */
     pp.forEach(function(player, i) {
       const card = createGameCard(player.name);
       gamesGrid.appendChild(card.element);
@@ -790,7 +796,7 @@ const controllerMiniScreen = (function () {
         },
         onGameOver: function() {
           card.element.classList.add('is-over');
-          /* Find the real index in the full players array */
+          /* Zoek de echte index in de volledige spelerlijst */
           const allPlayers = networkManager.getPlayers();
           const realIdx = allPlayers.indexOf(player);
           if (realIdx >= 0) {
@@ -803,6 +809,7 @@ const controllerMiniScreen = (function () {
           checkAllOver();
         },
         onDraw: function(state) {
+          /* Stuur de volledige spelstatus naar de controller */
           const allPlayers = networkManager.getPlayers();
           const realIdx = allPlayers.indexOf(player);
           if (realIdx >= 0) {
@@ -824,16 +831,16 @@ const controllerMiniScreen = (function () {
       games.push(g);
     });
 
-    /* Show game view */
+    /* Toon spelweergave */
     ui.hideAll();
     ui.show('host-game');
     ui.showHostBar();
     ui.showBack();
 
-    /* Tell controllers to start */
+    /* Vertel controllers dat het spel begint */
     networkManager.sendToAll({ type: 'gameStart' });
 
-    /* Start all games */
+    /* Start alle spellen */
     games.forEach(function(g) { g.start(); });
   }
 
@@ -888,7 +895,7 @@ const controllerMiniScreen = (function () {
   }
 
   /* ──────────────────────
-     CONTROLLER FLOW
+     CONTROLLER VERLOOP: verbinden, wachten, spelen
      ────────────────────── */
   document.getElementById('btn-join').addEventListener('click', showJoinForm);
   document.getElementById('connect-btn').addEventListener('click', doJoin);
@@ -970,7 +977,7 @@ const controllerMiniScreen = (function () {
     });
   }
 
-  /* ── AUTO-ROUTE from index.html ── */
+  /* ── AUTOMATISCHE ROUTE vanuit index.html op basis van ?role= parameter ── */
   const urlRole = new URLSearchParams(window.location.search).get('role');
   if (urlRole === 'host') {
     goHostLobby();
@@ -978,7 +985,7 @@ const controllerMiniScreen = (function () {
     showJoinForm();
   }
 
-  /* ── KEYBOARD CONTROLS (host/desktop) ── */
+  /* ── TOETSENBORD BESTURING: werkt voor host én controller ── */
   const KEY_MAP = {
     ArrowLeft:'left', ArrowRight:'right', ArrowUp:'rotate',
     ArrowDown:'softDrop', ' ':'hardDrop', z:'hold', c:'hold', p:'pause'
@@ -986,20 +993,20 @@ const controllerMiniScreen = (function () {
   window.addEventListener('keydown', function(e) {
     const action = KEY_MAP[e.key];
     if (!action) return;
-    /* Host: direct game control */
+    /* Host: directe spelbesturing */
     if (games.length) {
       e.preventDefault();
       games.forEach(function(g) { if (!g.isOver()) g.handleAction(action); });
       return;
     }
-    /* Controller: send via network */
+    /* Controller: verstuur actie via netwerk naar host */
     if (controllerActive) {
       e.preventDefault();
       networkManager.controllerSend({ action: action });
     }
   });
 
-  /* ── CLEANUP ── */
+  /* ── OPRUIMEN: alles netjes afsluiten bij pagina verlaten ── */
   window.addEventListener('beforeunload', function() {
     games.forEach(function(g){g.cleanup();});
     controllerPad.cleanup();
